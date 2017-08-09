@@ -2,6 +2,7 @@ import asyncio
 import json
 import time
 import unittest
+
 from pprint import pprint
 
 import rocket_snake
@@ -182,3 +183,13 @@ class Tester(AsyncTester):
 
         print("Done with playlists data throughput testing, {0} requests were executed. \nThat means an average of {1} milliseconds per request."
                 .format(done_requests, round(1000 * (self.time_track("Time taken for playlists data throughput was {0} seconds.") / done_requests), 1)))
+    
+    @async_test
+    async def test_authorization_masked(self):
+        print("Testing that authorization key does not show up on failure")
+        client = rocket_snake.RLS_Client(api_key=config["key"], auto_rate_limit=True)
+        try:
+            _ = await client.get_player(unique_id="notarealid", platform=rocket_snake.constants.STEAM)
+        except rocket_snake.custom_exceptions.APIBadResponseCodeError as exception:
+            assert config["key"] not in str(exception), "Key was leaked in debug output"
+        
